@@ -11,7 +11,7 @@ HTML = """
     <title>Azure Python 3.11 + PostgreSQL</title>
 </head>
 <body>
-    <h2>Store Data in PostgreSQL</h2>
+    <h2>Occupancy Prediction</h2>
 
     <form method="post" action="/predict">
         Temperature: <input name="Temperature" required><br><br>
@@ -20,14 +20,11 @@ HTML = """
     </form>
 
     <h3>{{ result }}</h3>
-
-    <br>
-    <a href="/data">View Stored Data</a>
 </body>
 </html>
 """
 
-# ---------- DB CONNECTION (YOUR DETAILS ADDED) ----------
+# ---------- DB CONNECTION ----------
 def get_connection():
     return psycopg2.connect(
         dbname="si-database",
@@ -54,7 +51,6 @@ def create_table():
     cur.close()
     conn.close()
 
-# Run once at startup
 create_table()
 
 # ---------- ROUTES ----------
@@ -73,7 +69,7 @@ def predict():
         else:
             result = "It is not Occupied"
 
-        # Insert into PostgreSQL
+        # ✅ STORE DATA IN DB (but DO NOT show it)
         conn = get_connection()
         cur = conn.cursor()
         cur.execute(
@@ -84,22 +80,11 @@ def predict():
         cur.close()
         conn.close()
 
+        # ✅ Only show result, NOT DB data
         return render_template_string(HTML, result=result)
 
     except Exception as e:
-        return f"Error: {str(e)}"
-
-# ---------- VIEW DATA ----------
-@app.route('/data')
-def data():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM predictions ORDER BY id DESC")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    return str(rows)
+        return "Something went wrong"
 
 if __name__ == "__main__":
     app.run()
